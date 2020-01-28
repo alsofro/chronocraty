@@ -4,3 +4,6 @@ env/
 media-files/
 chronocraty/chronocraty/settings.py
 *.pyc
+venv/
+.vscode
+*.code-workspace
