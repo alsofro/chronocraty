@@ -7,3 +7,4 @@ chronocraty/chronocraty/settings.py
 venv/
 .vscode
 *.code-workspace
+*.sqlite3

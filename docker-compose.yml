@@ -1,0 +1,21 @@
+version: '3'
+services:
+  web:
+    build: .
+    ports:
+      - 8000:8000
+    volumes:
+      - ./chronocraty:/app
+    command: sh -c "python manage.py runserver 0.0.0.0:8000"
+    depends_on:
+      - db
+    
+  db:
+    image: postgres
+    restart: always
+    ports:
+      - 5432:5432
+    volumes:
+      - ./sql_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_PASSWORD: postgres
