@@ -2,7 +2,6 @@
 env/
 .idea/
 media-files/
-chronocraty/chronocraty/settings.py
 *.pyc
 venv/
 .vscode
