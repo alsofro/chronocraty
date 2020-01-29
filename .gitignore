@@ -6,3 +6,4 @@ media-files/
 venv/
 .vscode
 *.code-workspace
+*.sqlite3
