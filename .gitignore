@@ -7,3 +7,4 @@ venv/
 .vscode
 *.code-workspace
 *.sqlite3
+settings_local.py*
