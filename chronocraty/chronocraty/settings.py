@@ -25,7 +25,7 @@ SECRET_KEY = '-25%v(q42q064-&4x6+0m8)nbdicp+l5+5h7!p+7h#)45e8xar'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'core'
 ]
 
 MIDDLEWARE = [
@@ -120,7 +121,7 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 
-try:
-    from settings_local import *
-except:
-    pass
+# try:
+#     from .settings_local import *
+# except:
+#     pass
