@@ -14,7 +14,7 @@ def validate_username(username):
 
 class BaseAbstractCommonModel(models.Model):
     date_created = models.DateTimeField(auto_now_add=True)
-    date_updated = models.DateTimeField(auto_now_add=True, auto_now=True)
+    date_updated = models.DateTimeField(auto_now=True)
 
     class Meta:
         abstract = True
@@ -81,7 +81,7 @@ class User(BaseAbstractCommonModel, AbstractBaseUser):
     first_name = models.CharField(max_length=64)
     last_name = models.CharField(max_length=64)
     email = models.EmailField(max_length=255, unique=True)
-    username = models.CharField(blank=True, null=True, unique=True, validators=[validate_username])
+    username = models.CharField(max_length=32, blank=True, null=True, unique=True, validators=[validate_username])
 
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
