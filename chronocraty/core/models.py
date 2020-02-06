@@ -1,7 +1,7 @@
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 from django.core.exceptions import ValidationError
 from django.db import models
-
+from django.contrib.auth.models import PermissionsMixin
 
 # validators
 
@@ -54,7 +54,7 @@ class UserManager(BaseUserManager):
         )
         user_obj.active = is_active
         user_obj.is_staff = is_staff
-        user_obj.admin = is_admin
+        user_obj.is_admin = is_admin
         user_obj.set_password(password)
         user_obj.save(using=self._db)
         return user_obj
@@ -109,6 +109,12 @@ class User(BaseAbstractCommonModel, AbstractBaseUser):
         if not self.first_name:
             return self.email
         return self.first_name
+
+    def has_perm(self, perm, obj=None):
+        return self.is_admin
+
+    def has_module_perms(self, app_label):
+        return self.is_admin
 
 
 class Task(TaskBaseModel):
