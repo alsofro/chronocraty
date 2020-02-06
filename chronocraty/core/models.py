@@ -1,7 +1,7 @@
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 from django.core.exceptions import ValidationError
 from django.db import models
-from django.contrib.auth.models import PermissionsMixin
+
 
 # validators
 
@@ -32,7 +32,7 @@ class BaseModel(BaseAbstractCommonModel):
 
 
 class TaskBaseModel(BaseModel):
-    date_expired = models.DateTimeField(blank=True)
+    date_expired = models.DateTimeField(blank=True, null=True)
     is_active = models.BooleanField(default=True)
     color = models.CharField(max_length=16, default='#1456ab#103265')
 
@@ -81,7 +81,7 @@ class User(BaseAbstractCommonModel, AbstractBaseUser):
     first_name = models.CharField(max_length=64)
     last_name = models.CharField(max_length=64)
     email = models.EmailField(max_length=255, unique=True)
-    username = models.CharField(max_length=32, blank=True, null=True, unique=True, validators=[validate_username])
+    username = models.CharField(max_length=128, blank=True, null=True, unique=True, validators=[validate_username])
 
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
