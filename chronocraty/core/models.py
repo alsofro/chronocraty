@@ -91,7 +91,6 @@ class User(BaseAbstractCommonModel, AbstractBaseUser):
     confirmed_date = models.DateTimeField(blank=True, null=True)
 
     status = models.CharField(max_length=256, blank=True, null=True)
-    tasks = models.ManyToManyField('Task', blank=True, related_name='users')
 
     USERNAME_FIELD = 'email'
 
@@ -121,7 +120,7 @@ class Task(TaskBaseModel):
     priority = models.PositiveSmallIntegerField()
     tags = models.ManyToManyField('Tag', blank=True, related_name='tasks')
     subtasks = models.ManyToManyField('SubTask', blank=True, related_name='tasks')
-    comments = models.ManyToManyField('Comment', blank=True, related_name='tasks')
+    users = models.ManyToManyField(User, related_name='tasks')
 
 
 class SubTask(TaskBaseModel):
@@ -129,7 +128,7 @@ class SubTask(TaskBaseModel):
 
 
 class Comment(BaseModel):
-    pass
+    task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='comments')
 
 
 class Tag(BaseModel):
