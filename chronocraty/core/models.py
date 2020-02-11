@@ -1,43 +1,31 @@
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
-from django.core.exceptions import ValidationError
 from django.db import models
 
-
-# validators
-
-def validate_username(username):
-    if len(username) < 3:
-        raise ValidationError('Username must contain at least 3 characters')
+from core.utils.validators import validate_username
 
 
 # abstract models
 
-class BaseAbstractCommonModel(models.Model):
-    date_created = models.DateTimeField(auto_now_add=True)
-    date_updated = models.DateTimeField(auto_now=True)
+class BaseModel(models.Model):
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         abstract = True
 
 
-class BaseModel(BaseAbstractCommonModel):
+class BaseTaskModel(BaseModel):
     title = models.CharField(max_length=64, db_index=True)
-    description = models.TextField(blank=True, db_index=True)
+    description = models.TextField(blank=True, null=True, db_index=True)
+    date_expired = models.DateTimeField(blank=True, null=True)
+    is_active = models.BooleanField(default=True)
+    color = models.CharField(max_length=8, default='#1456ab')
 
     class Meta:
         abstract = True
 
     def __str__(self):
         return self.title
-
-
-class TaskBaseModel(BaseModel):
-    date_expired = models.DateTimeField(blank=True, null=True)
-    is_active = models.BooleanField(default=True)
-    color = models.CharField(max_length=16, default='#1456ab#103265')
-
-    class Meta:
-        abstract = True
 
 
 # models
@@ -77,7 +65,7 @@ class UserManager(BaseUserManager):
         return user_obj
 
 
-class User(BaseAbstractCommonModel, AbstractBaseUser):
+class User(BaseModel, AbstractBaseUser):
     first_name = models.CharField(max_length=64)
     last_name = models.CharField(max_length=64)
     email = models.EmailField(max_length=255, unique=True)
@@ -97,10 +85,12 @@ class User(BaseAbstractCommonModel, AbstractBaseUser):
     objects = UserManager()
 
     def __str__(self):
-        return self.email
+        if not self.first_name and not self.last_name:
+            return self.email
+        return f'{self.first_name} {self.last_name}'
 
     def get_full_name(self):
-        if not self.first_name and self.last_name:
+        if not self.first_name and not self.last_name:
             return self.email
         return f'{self.first_name} {self.last_name}'
 
@@ -116,20 +106,28 @@ class User(BaseAbstractCommonModel, AbstractBaseUser):
         return self.is_admin
 
 
-class Task(TaskBaseModel):
-    priority = models.PositiveSmallIntegerField()
+class Task(BaseTaskModel):
+    priority = models.PositiveSmallIntegerField(default=1)
     tags = models.ManyToManyField('Tag', blank=True, related_name='tasks')
-    subtasks = models.ManyToManyField('SubTask', blank=True, related_name='tasks')
-    users = models.ManyToManyField(User, related_name='tasks')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='tasks')
 
 
-class SubTask(TaskBaseModel):
-    position = models.FloatField()
+class SubTask(BaseTaskModel):
+    position = models.FloatField(default=10000)
+    task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='subtasks')
 
 
 class Comment(BaseModel):
+    body = models.TextField(db_index=True)
     task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='comments')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='comments')
+
+    def __str__(self):
+        return self.body
 
 
 class Tag(BaseModel):
-    pass
+    name = models.CharField(max_length=64, db_index=True, unique=True)
+
+    def __str__(self):
+        return self.name

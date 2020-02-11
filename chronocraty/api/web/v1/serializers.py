@@ -3,37 +3,40 @@ from rest_framework import serializers
 from core.models import Task, SubTask, Comment, User, Tag
 
 
-class UserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        exclude = ('password', 'tasks', 'confirmed', 'confirmed_date', 'email')
-
-
 class SubtaskSerializer(serializers.ModelSerializer):
     class Meta:
         model = SubTask
-        fields = '__all__'
+        exclude = ('task',)
 
 
 class CommentSerializer(serializers.ModelSerializer):
+    user = serializers.StringRelatedField(read_only=True)
+
     class Meta:
         model = Comment
-        fields = '__all__'
+        exclude = ('task',)
 
 
 class TagSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tag
-        exclude = ('date_created', 'date_updated')
+        fields = '__all__'
 
 
 class TaskSerializer(serializers.ModelSerializer):
     comments = CommentSerializer(many=True, read_only=True)
     subtasks = SubtaskSerializer(many=True, read_only=True)
     tags = TagSerializer(many=True, read_only=True)
-    users = UserSerializer(many=True)
+    user = serializers.StringRelatedField(read_only=True)
 
     class Meta:
         model = Task
-        exclude = ('is_active',)
+        fields = '__all__'
 
+
+class UserSerializer(serializers.ModelSerializer):
+    tasks = serializers.HyperlinkedRelatedField(many=True, read_only=True, view_name='task-detail')
+
+    class Meta:
+        model = User
+        exclude = ('password', 'confirmed', 'confirmed_date', 'email')
