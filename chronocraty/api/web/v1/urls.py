@@ -27,6 +27,5 @@ urlpatterns = [
     path('comments/<int:pk>/', CommentDetailAPIView.as_view(), name='comment-detail'),
 
     path('tags/', TagListAPIView.as_view(), name='tag-list'),
-    path('tags/<int:pk>/', TagDetailAPIView.as_view(), name='tag-detail'),
-
+    path('tags/<int:pk>/', TagDetailAPIView.as_view(), name='tag-detail')
 ]

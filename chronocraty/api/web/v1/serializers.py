@@ -39,4 +39,4 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        exclude = ('password', 'confirmed', 'confirmed_date', 'email')
+        exclude = ('confirmed', 'confirmed_date')
