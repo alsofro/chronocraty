@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from rest_framework import generics
-from rest_framework.generics import get_object_or_404
 from rest_framework import permissions
+from rest_framework.generics import get_object_or_404
 
 from core.models import (
     Task,
@@ -9,6 +9,7 @@ from core.models import (
     Comment,
     Tag
 )
+from .permissions import IsOwnerOrReadOnly, IsSubtaskOwnerOrReadOnly
 from .serializers import (
     UserSerializer,
     TaskSerializer,
@@ -43,24 +44,27 @@ class TaskListCreateAPIView(generics.ListCreateAPIView):
 class TaskDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Task.objects.all()
     serializer_class = TaskSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = [IsOwnerOrReadOnly]
 
 
 class SubtaskListCreateAPIView(generics.ListCreateAPIView):
-    queryset = SubTask.objects.all()
     serializer_class = SubtaskSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = [IsSubtaskOwnerOrReadOnly]
 
     def perform_create(self, serializer):
         task_pk = self.kwargs.get('task_pk')
         task = get_object_or_404(Task, pk=task_pk)
         serializer.save(task=task)
 
+    def get_queryset(self):
+        task_pk = self.kwargs.get('task_pk')
+        return SubTask.objects.filter(task=task_pk)
+
 
 class SubtaskDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
     queryset = SubTask.objects.all()
     serializer_class = SubtaskSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = [IsSubtaskOwnerOrReadOnly]
 
 
 class CommentListCreateAPIView(generics.ListCreateAPIView):
@@ -78,13 +82,13 @@ class CommentListCreateAPIView(generics.ListCreateAPIView):
 class CommentDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = [IsOwnerOrReadOnly]
 
 
 class TagListCreateAPIView(generics.ListCreateAPIView):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = [IsOwnerOrReadOnly]
 
     def perform_create(self, serializer):
         task_pk = self.kwargs.get('task_pk')
@@ -97,4 +101,4 @@ class TagListCreateAPIView(generics.ListCreateAPIView):
 class TagDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = [IsOwnerOrReadOnly]
