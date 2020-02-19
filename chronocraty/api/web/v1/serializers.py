@@ -1,23 +1,29 @@
+from django.contrib.auth.hashers import make_password
 from rest_framework import serializers
 
 from core.models import Task, SubTask, Comment, User, Tag
 
 
 class SubtaskSerializer(serializers.ModelSerializer):
+    task = serializers.StringRelatedField(read_only=True)
+
     class Meta:
         model = SubTask
-        exclude = ('task',)
+        fields = '__all__'
 
 
 class CommentSerializer(serializers.ModelSerializer):
     user = serializers.StringRelatedField(read_only=True)
+    task = serializers.StringRelatedField(read_only=True)
 
     class Meta:
         model = Comment
-        exclude = ('task',)
+        fields = '__all__'
 
 
 class TagSerializer(serializers.ModelSerializer):
+    task = serializers.StringRelatedField(read_only=True)
+
     class Meta:
         model = Tag
         fields = '__all__'
@@ -40,3 +46,6 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         exclude = ('confirmed', 'confirmed_date')
+
+    def validate_password(self, value: str) -> str:
+        return make_password(value)
