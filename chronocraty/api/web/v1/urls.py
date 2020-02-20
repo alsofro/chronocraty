@@ -5,11 +5,11 @@ from .views import (
     UserDetailAPIView,
     TaskListCreateAPIView,
     TaskDetailAPIView,
-    SubtaskCreateAPIView,
+    SubtaskListCreateAPIView,
     SubtaskDetailAPIView,
-    CommentCreateAPIView,
+    CommentListCreateAPIView,
     CommentDetailAPIView,
-    TagListAPIView,
+    TagListCreateAPIView,
     TagDetailAPIView
 )
 
@@ -20,12 +20,12 @@ urlpatterns = [
     path('tasks/', TaskListCreateAPIView.as_view(), name='task-list'),
     path('tasks/<int:pk>/', TaskDetailAPIView.as_view(), name='task-detail'),
 
-    path('subtasks/', SubtaskCreateAPIView.as_view(), name='subtask-create'),
-    path('subtasks/<int:pk>/', SubtaskDetailAPIView.as_view(), name='subtask-detail'),
+    path('tasks/<int:task_pk>/subtasks/', SubtaskListCreateAPIView.as_view(), name='subtask-create'),
+    path('tasks/<int:task_pk>/subtasks/<int:pk>/', SubtaskDetailAPIView.as_view(), name='subtask-detail'),
 
-    path('comments/', CommentCreateAPIView.as_view(), name='comment-create'),
-    path('comments/<int:pk>/', CommentDetailAPIView.as_view(), name='comment-detail'),
+    path('tasks/<int:task_pk>/comments/', CommentListCreateAPIView.as_view(), name='comment-create'),
+    path('tasks/<int:task_pk>/comments/<int:pk>/', CommentDetailAPIView.as_view(), name='comment-detail'),
 
-    path('tags/', TagListAPIView.as_view(), name='tag-list'),
-    path('tags/<int:pk>/', TagDetailAPIView.as_view(), name='tag-detail')
+    path('tasks/<int:task_pk>/tags/', TagListCreateAPIView.as_view(), name='tag-list'),
+    path('tasks/<int:task_pk>/tags/<int:pk>/', TagDetailAPIView.as_view(), name='tag-detail')
 ]
