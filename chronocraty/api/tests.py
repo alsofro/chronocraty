@@ -5,7 +5,7 @@ from django.urls import reverse
 from django.test import TestCase
 from django.test.client import Client
 from rest_framework import status
-from rest_framework.test import APIRequestFactory, APIClient
+from rest_framework.test import APIRequestFactory, APIClient, force_authenticate
 
 
 from api.web.v1.views import TaskListCreateAPIView, UserListCreateAPIView
@@ -21,7 +21,8 @@ class TestTasksAPI(TestCase):
         self.assertEqual.__self__.maxDiff = None
 
     def test_api_create_task(self):
-        user_id = User.objects.get(email='mail@mail.ru').id
+        user = User.objects.get(email='mail@mail.ru')
+        user_id = user.id
         factory = APIRequestFactory()
         data = {
             "title": "Task1",
@@ -34,6 +35,7 @@ class TestTasksAPI(TestCase):
         }
         view = TaskListCreateAPIView.as_view()
         request = factory.post('/api/tasks/', json.dumps(data), content_type='application/json')
+        force_authenticate(request, user=user)
         response = view(request)
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
