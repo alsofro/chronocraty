@@ -1,4 +1,5 @@
 import json
+import pytz
 from datetime import datetime
 
 from django.urls import reverse
@@ -8,8 +9,9 @@ from rest_framework import status
 from rest_framework.test import APIRequestFactory, APIClient, force_authenticate
 
 
-from api.web.v1.views import TaskListCreateAPIView, UserListCreateAPIView
-from core.models import Task, User
+from api.web.v1.views import TaskListCreateAPIView, TaskDetailAPIView, UserListCreateAPIView, \
+    UserDetailAPIView, SubtaskListCreateAPIView, SubtaskDetailAPIView
+from core.models import Task, SubTask, User
 
 
 # Create your tests here.
@@ -41,6 +43,36 @@ class TestTasksAPI(TestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Task.objects.count(), 1)
         self.assertEqual(Task.objects.get().title, 'Task1')
+
+    def test_api_detal_task(self):
+        user = User.objects.get(email='mail@mail.ru')
+        user_id = user.id
+        
+        factory = APIRequestFactory()
+        data = {
+            "title": "Task1",
+            "description": "Task1 description",
+            "date_expired": datetime(2025,1,1,12,0,0, tzinfo=pytz.UTC),
+            "is_active": True,
+            "color": "#331122",
+            "priority": 1,
+            "user": user
+        }
+        task = Task.objects.create(**data)
+        task.save()
+        view = TaskDetailAPIView.as_view()
+        request = factory.get('/api/tasks/{0}/'.format(task.id))
+        force_authenticate(request, user=user)
+        response = view(request, pk=task.id)
+        received_data = json.loads(response.rendered_content.decode())
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(data['title'],       received_data['title'])
+        self.assertEqual(data['description'], received_data['description'])
+        self.assertEqual(data['is_active'],   received_data['is_active'])
+        self.assertEqual(data['color'],       received_data['color'])
+        self.assertEqual(data['priority'],    received_data['priority'])
+        self.assertEqual('mail@mail.ru',      received_data['user'])
 
 
 class TestUsersAPI(TestCase):
@@ -79,3 +111,46 @@ class TestUsersAPI(TestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(User.objects.count(), 2)
         self.assertEqual(User.objects.get(first_name='John').username, 'John Smith')
+
+class TestSubTasksAPI(TestCase):
+    def setUp(self):
+        user = User.objects.create_user('mail@mail.ru', password='password', is_active=True, is_staff=True, is_admin=True)
+        Task.objects.create(**{
+            "title": "Task1",
+            "description": "Task1 description",
+            "date_expired": datetime(2025,1,1,12,0,0, tzinfo=pytz.UTC),
+            "is_active": True,
+            "color": "#331122",
+            "priority": 1,
+            "user": user
+        })
+        self.assertEqual.__self__.maxDiff = None
+
+    def test_api_create_subtask(self):
+        task = Task.objects.get(title='Task1')
+        user = User.objects.get(email='mail@mail.ru')
+        user_id = user.id
+        factory = APIRequestFactory()
+        data = {
+            "title": "SubTask1",
+            "description": "SubTask1 description",
+            "date_expired": "2025-01-01T12:00:00+03:00",
+            "is_active": True,
+            "position": 100,
+            "color": "#331122",
+            "user_pk": user_id,
+            "task": task.id
+        }
+        view = SubtaskListCreateAPIView.as_view()
+        request = factory.post('/api/tasks/{0}/subtasks'.format(task.id), json.dumps(data), content_type='application/json')
+        force_authenticate(request, user=user)
+        response = view(request, task_pk=task.id)
+        received_data = json.loads(response.rendered_content.decode())
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(data['title'],       received_data['title'])
+        self.assertEqual(data['description'], received_data['description'])
+        self.assertEqual(data['date_expired'],received_data['date_expired'])
+        self.assertEqual(data['is_active'],   received_data['is_active'])
+        self.assertEqual(data['position'],    received_data['position'])
+        self.assertEqual(data['color'],       received_data['color'])
+        self.assertEqual(task.title,          received_data['task'])
