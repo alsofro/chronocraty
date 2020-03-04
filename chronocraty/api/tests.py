@@ -10,8 +10,9 @@ from rest_framework.test import APIRequestFactory, APIClient, force_authenticate
 
 
 from api.web.v1.views import TaskListCreateAPIView, TaskDetailAPIView, UserListCreateAPIView, \
-    UserDetailAPIView, SubtaskListCreateAPIView, SubtaskDetailAPIView
-from core.models import Task, SubTask, User
+    UserDetailAPIView, SubtaskListCreateAPIView, SubtaskDetailAPIView, CommentListCreateAPIView, \
+    CommentDetailAPIView, TagListCreateAPIView, TagDetailAPIView
+from core.models import Task, SubTask, User, Comment, Tag
 
 
 # Create your tests here.
@@ -187,4 +188,58 @@ class TestSubTasksAPI(TestCase):
         self.assertEqual(subtask_data['position'],    received_data['position'])
         self.assertEqual(task.title,      received_data['task'])
 
+class TestCommentsAPI(TestCase):
+    def setUp(self):
+        user = User.objects.create_user('mail@mail.ru', password='password', is_active=True, is_staff=True, is_admin=True)
+        Task.objects.create(**{
+            "title": "Task1",
+            "description": "Task1 description",
+            "date_expired": datetime(2025,1,1,12,0,0, tzinfo=pytz.UTC),
+            "is_active": True,
+            "color": "#331122",
+            "priority": 1,
+            "user": user
+        })
+        self.assertEqual.__self__.maxDiff = None
 
+    def test_api_create_comment(self):
+        task = Task.objects.get(title='Task1')
+        user = User.objects.get(email='mail@mail.ru')
+        user_id = user.id
+        factory = APIRequestFactory()
+        data = {
+            "body": "Comment1 of Task1",
+            "user_pk": user_id,
+            "task": task.id
+        }
+        view = CommentListCreateAPIView.as_view()
+        request = factory.post('/api/tasks/{0}/comments'.format(task.id), json.dumps(data), content_type='application/json')
+        force_authenticate(request, user=user)
+        response = view(request, task_pk=task.id)
+        received_data = json.loads(response.rendered_content.decode())
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(data['body'], received_data['body'])
+        self.assertEqual(user.email,   received_data['user'])
+        self.assertEqual(task.title,   received_data['task'])
+
+    def test_api_detal_comment(self):
+        user = User.objects.get(email='mail@mail.ru')
+        task = Task.objects.get(title='Task1')
+        user_id = user.id
+        factory = APIRequestFactory()
+        data = {
+            "body": "Comment1 of Task1",
+            "task": task,
+            "user": user
+        }
+        comment = Comment.objects.create(**data)
+        comment.save()
+        view = CommentDetailAPIView.as_view()
+        request = factory.get('/api/tasks/{0}/comments/{1}/'.format(task.id, comment.id))
+        force_authenticate(request, user=user)
+        response = view(request, task_pk=task.id, pk=comment.id)
+        received_data = json.loads(response.rendered_content.decode())
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(data['body'], received_data['body'])
+        self.assertEqual(task.title,   received_data['task'])
+        self.assertEqual(user.email,   received_data['user'])
