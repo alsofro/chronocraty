@@ -158,20 +158,8 @@ class TestSubTasksAPI(TestCase):
     def test_api_detal_subtask(self):
         user = User.objects.get(email='mail@mail.ru')
         user_id = user.id
-        
         factory = APIRequestFactory()
-
-        task_data = {
-            "title": "Task1",
-            "description": "Task1 description",
-            "date_expired": datetime(2025,1,1,12,0,0, tzinfo=pytz.UTC),
-            "is_active": True,
-            "color": "#331122",
-            "priority": 1,
-            "user": user
-        }
-        task = Task.objects.create(**task_data)
-        task.save()
+        task = Task.objects.get(title='Task1')
 
         subtask_data = {
             "title": "SubTask1",
@@ -198,3 +186,5 @@ class TestSubTasksAPI(TestCase):
         self.assertEqual(subtask_data['color'],       received_data['color'])
         self.assertEqual(subtask_data['position'],    received_data['position'])
         self.assertEqual(task.title,      received_data['task'])
+
+
