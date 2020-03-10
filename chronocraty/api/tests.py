@@ -243,3 +243,56 @@ class TestCommentsAPI(TestCase):
         self.assertEqual(data['body'], received_data['body'])
         self.assertEqual(task.title,   received_data['task'])
         self.assertEqual(user.email,   received_data['user'])
+
+class TestTagsAPI(TestCase):
+    def setUp(self):
+        user = User.objects.create_user('mail@mail.ru', password='password', is_active=True, is_staff=True, is_admin=True)
+        Task.objects.create(**{
+            "title": "Task1",
+            "description": "Task1 description",
+            "date_expired": datetime(2025,1,1,12,0,0, tzinfo=pytz.UTC),
+            "is_active": True,
+            "color": "#331122",
+            "priority": 1,
+            "user": user
+        })
+        self.assertEqual.__self__.maxDiff = None
+
+    def test_api_create_tag(self):
+        task = Task.objects.get(title='Task1')
+        task_id = task.id
+        user = User.objects.get(email='mail@mail.ru')
+        factory = APIRequestFactory()
+        data = {
+            "name": "Tag1 of Task1",
+            "task": task_id
+        }
+        view = TagListCreateAPIView.as_view()
+        request = factory.post('/api/tasks/{0}/tags'.format(task.id), json.dumps(data), content_type='application/json')
+        force_authenticate(request, user=user)
+        response = view(request, task_pk=task.id)
+        received_data = json.loads(response.rendered_content.decode())
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(data['name'], received_data['name'])
+        self.assertEqual(task.title,   received_data['task'])
+
+    def test_api_detal_tag(self):
+        user = User.objects.get(email='mail@mail.ru')
+        task = Task.objects.get(title='Task1')
+        # user_id = user.id
+        factory = APIRequestFactory()
+        data = {
+            "name": "Tag1 of Task1",
+            "task": task
+        }
+        tag = Tag.objects.create(**data)
+        tag.save()
+        view = TagDetailAPIView.as_view()
+        request = factory.get('/api/tasks/{0}/tags/{1}/'.format(task.id, tag.id))
+        force_authenticate(request, user=user)
+        response = view(request, task_pk=task.id, pk=tag.id)
+        received_data = json.loads(response.rendered_content.decode())
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(data['name'], received_data['name'])
+        self.assertEqual(task.title,   received_data['task'])
+        
