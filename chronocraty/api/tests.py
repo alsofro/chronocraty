@@ -108,7 +108,7 @@ class TestUsersAPI(TestCase):
         view = UserListCreateAPIView.as_view()
         request = factory.post('/api/users/', json.dumps(data), content_type='application/json')
         response = view(request)
-
+        received_data = json.loads(response.rendered_content.decode())
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(User.objects.count(), 2)
         self.assertEqual(User.objects.get(first_name='John').username, 'John Smith')
